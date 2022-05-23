@@ -824,14 +824,12 @@ fn is_unstable_reexport<'a, 'tcx>(
 ) -> bool {
     // Get the LocalDefId so we can lookup the item to check the kind.
     let def_id = if let Some(def_id) = tcx.hir().opt_local_def_id(id) {
-        debug!(?def_id);
         def_id
     } else {
         return false;
     };
 
     let stab = if let Some(stab) = tcx.stability().local_stability(def_id) {
-        debug!(?stab);
         stab
     } else {
         return false;
@@ -839,7 +837,6 @@ fn is_unstable_reexport<'a, 'tcx>(
 
     let item = tcx.hir().item(hir::ItemId { def_id });
     let item_kind = &item.kind;
-    debug!(?item_kind);
 
     // If this is a path that isn't a use, we don't need to do anything special
     if !matches!(item_kind, ItemKind::Use(..)) {
@@ -855,12 +852,8 @@ fn is_unstable_reexport<'a, 'tcx>(
         return false;
     };
 
-    debug!(?decision);
-
     // If we are going to deny the usage, check whether it's a re-export first with the same unstable feature.
     if let rustc_middle::middle::stability::EvalResult::Deny { feature, .. } = decision {
-        debug!(?feature);
-
         if stab.level.is_unstable() && feature == stab.feature {
             // This is a re-export, marked as unstable, with the same feature name. Don't require a `#![feature]` gate
             return true;
