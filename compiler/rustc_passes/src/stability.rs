@@ -817,10 +817,7 @@ impl<'tcx> Visitor<'tcx> for Checker<'tcx> {
 }
 
 /// Check whether a path is a `use` item
-fn is_path_reexport<'tcx>(
-    tcx: TyCtxt<'tcx>,
-    id: hir::HirId,
-) -> bool {
+fn is_path_reexport<'tcx>(tcx: TyCtxt<'tcx>, id: hir::HirId) -> bool {
     // Get the LocalDefId so we can lookup the item to check the kind.
     let Some(def_id) = tcx.hir().opt_local_def_id(id) else { return false};
 
