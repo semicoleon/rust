@@ -823,34 +823,25 @@ fn is_unstable_reexport<'a, 'tcx>(
     id: hir::HirId,
 ) -> bool {
     // Get the LocalDefId so we can lookup the item to check the kind.
-    let def_id = if let Some(def_id) = tcx.hir().opt_local_def_id(id) {
-        def_id
-    } else {
+    let Some(def_id) = tcx.hir().opt_local_def_id(id) else { return false};
+
+    let Some(stab) = tcx.stability().local_stability(def_id) else {
         return false;
     };
-
-    let stab = if let Some(stab) = tcx.stability().local_stability(def_id) {
-        stab
-    } else {
-        return false;
-    };
-
-    let item = tcx.hir().item(hir::ItemId { def_id });
-    let item_kind = &item.kind;
 
     // If this is a path that isn't a use, we don't need to do anything special
-    if !matches!(item_kind, ItemKind::Use(..)) {
+    if !matches!(tcx.hir().item(hir::ItemId { def_id }).kind, ItemKind::Use(..)) {
         return false;
     }
 
-    let decision = if let Some(def_id) = path.res.opt_def_id() {
-        let method_span = path.segments.last().map(|s| s.ident.span);
-
-        tcx.eval_stability(def_id, Some(id), path.span, method_span)
-    } else {
+     let Some(def_id) = path.res.opt_def_id() else {
         // If the path doesn't resolve to anything, there's nothing more to check.
         return false;
     };
+
+    let method_span = path.segments.last().map(|s| s.ident.span);
+
+    let decision = tcx.eval_stability(def_id, Some(id), path.span, method_span);
 
     // If we are going to deny the usage, check whether it's a re-export first with the same unstable feature.
     if let rustc_middle::middle::stability::EvalResult::Deny { feature, .. } = decision {
