@@ -8,11 +8,8 @@
 extern crate lint_stability;
 extern crate lint_stability_reexport;
 
-#[unstable(feature = "unstable_test_feature", issue = "none")]
-pub use lint_stability::unstable;
-
+use lint_stability::unstable;
 // We want to confirm that using a re-export through another crate behaves the same way as using an item directly
-#[unstable(feature = "unstable_test_feature", issue = "none")]
 use lint_stability_reexport::unstable_text;
 
 fn main() {

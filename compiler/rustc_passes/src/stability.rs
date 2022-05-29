@@ -806,7 +806,7 @@ impl<'tcx> Visitor<'tcx> for Checker<'tcx> {
     }
 
     fn visit_path(&mut self, path: &'tcx hir::Path<'tcx>, id: hir::HirId) {
-        if !is_unstable_reexport(self.tcx, path, id) {
+        if !is_path_reexport(self.tcx, id) {
             if let Some(def_id) = path.res.opt_def_id() {
                 let method_span = path.segments.last().map(|s| s.ident.span);
                 self.tcx.check_stability(def_id, Some(id), path.span, method_span)
@@ -816,48 +816,20 @@ impl<'tcx> Visitor<'tcx> for Checker<'tcx> {
     }
 }
 
-/// Check whether the path is a re-export of an unstable item, that has also been marked as unstable under the same feature name.
-fn is_unstable_reexport<'a, 'tcx>(
+/// Check whether a path is a `use` item
+fn is_path_reexport<'tcx>(
     tcx: TyCtxt<'tcx>,
-    path: &'a hir::Path<'tcx>,
     id: hir::HirId,
 ) -> bool {
     // Get the LocalDefId so we can lookup the item to check the kind.
     let Some(def_id) = tcx.hir().opt_local_def_id(id) else { return false};
-
-    let Some(stab) = tcx.stability().local_stability(def_id) else {
-        return false;
-    };
 
     // If this is a path that isn't a use, we don't need to do anything special
     if !matches!(tcx.hir().item(hir::ItemId { def_id }).kind, ItemKind::Use(..)) {
         return false;
     }
 
-     let Some(def_id) = path.res.opt_def_id() else {
-        // If the path doesn't resolve to anything, there's nothing more to check.
-        return false;
-    };
-
-    let method_span = path.segments.last().map(|s| s.ident.span);
-
-    let decision = tcx.eval_stability(def_id, Some(id), path.span, method_span);
-
-    // If we are going to deny the usage, check whether it's a re-export first with the same unstable feature.
-    if let rustc_middle::middle::stability::EvalResult::Deny { feature, .. } = decision {
-        if stab.level.is_unstable() && feature == stab.feature {
-            // This is a re-export, marked as unstable, with the same feature name. Don't require a `#![feature]` gate
-            return true;
-        } else {
-            // We almost met the requirements but the feature name didn't match. Emit a warning in addition to the standard feature gate error.
-            tcx.sess.parse_sess.struct_warn("Re-exporting an unstable item without a feature gate requires marking the re-export as unstable with the same feature name")
-                // should probably be getting the span of the unstable attr here? Maybe make it an actual suggestion.
-                .span_help(path.span, format!("Use `#![unstable(feature = {})]` to re-export", feature))
-                .emit();
-        }
-    }
-
-    false
+    true
 }
 
 struct CheckTraitImplStable<'tcx> {
