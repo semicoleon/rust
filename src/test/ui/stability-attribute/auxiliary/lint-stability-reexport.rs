@@ -5,6 +5,5 @@
 
 extern crate lint_stability;
 
-// Re-exporting without enabling the feature "unstable_test_feature" in this crate
 #[unstable(feature = "unstable_reexport", issue = "none")]
 pub use lint_stability::unstable_text;
