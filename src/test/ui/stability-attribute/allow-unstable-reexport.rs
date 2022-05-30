@@ -8,10 +8,12 @@
 extern crate lint_stability;
 extern crate lint_stability_reexport;
 
-use lint_stability::unstable;
+#[stable(feature = "lint_stability", since = "1.0.0")]
+pub use lint_stability::unstable;
 // We want to confirm that using a re-export through another crate behaves
 // the same way as using an item directly
-use lint_stability_reexport::unstable_text;
+#[stable(feature = "lint_stability", since = "1.0.0")]
+pub use lint_stability_reexport::unstable_text;
 
 fn main() {
     // Since we didn't enable the feature in this crate, we still can't

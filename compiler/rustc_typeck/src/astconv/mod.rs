@@ -426,6 +426,7 @@ impl<'o, 'tcx> dyn AstConv<'tcx> + 'o {
                             Some(arg.id()),
                             arg.span(),
                             None,
+                            Default::default(),
                             |_, _| {
                                 // Default generic parameters may not be marked
                                 // with stability attributes, i.e. when the

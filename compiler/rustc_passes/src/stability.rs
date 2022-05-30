@@ -13,7 +13,7 @@ use rustc_hir::intravisit::{self, Visitor};
 use rustc_hir::{FieldDef, Generics, HirId, Item, TraitRef, Ty, TyKind, Variant};
 use rustc_middle::hir::nested_filter;
 use rustc_middle::middle::privacy::AccessLevels;
-use rustc_middle::middle::stability::{DeprecationEntry, Index};
+use rustc_middle::middle::stability::{DeprecationEntry, EvalOverride, Index};
 use rustc_middle::ty::{self, query::Providers, TyCtxt};
 use rustc_session::lint;
 use rustc_session::lint::builtin::{INEFFECTIVE_UNSTABLE_TRAIT_IMPL, USELESS_DEPRECATED};
@@ -806,11 +806,19 @@ impl<'tcx> Visitor<'tcx> for Checker<'tcx> {
     }
 
     fn visit_path(&mut self, path: &'tcx hir::Path<'tcx>, id: hir::HirId) {
-        if !is_path_reexport(self.tcx, id) {
-            if let Some(def_id) = path.res.opt_def_id() {
-                let method_span = path.segments.last().map(|s| s.ident.span);
-                self.tcx.check_stability(def_id, Some(id), path.span, method_span)
-            }
+        if let Some(def_id) = path.res.opt_def_id() {
+            let method_span = path.segments.last().map(|s| s.ident.span);
+            self.tcx.check_stability_override(
+                def_id,
+                Some(id),
+                path.span,
+                method_span,
+                if is_path_reexport(self.tcx, id) {
+                    EvalOverride::AllowUnstable
+                } else {
+                    EvalOverride::None
+                },
+            )
         }
         intravisit::walk_path(self, path)
     }
@@ -823,6 +831,10 @@ fn is_path_reexport<'tcx>(tcx: TyCtxt<'tcx>, id: hir::HirId) -> bool {
 
     // If this is a path that isn't a use, we don't need to do anything special
     if !matches!(tcx.hir().item(hir::ItemId { def_id }).kind, ItemKind::Use(..)) {
+        return false;
+    }
+
+    if tcx.visibility(def_id) != ty::Visibility::Public {
         return false;
     }
 
