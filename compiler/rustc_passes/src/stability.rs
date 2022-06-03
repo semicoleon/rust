@@ -827,7 +827,7 @@ impl<'tcx> Visitor<'tcx> for Checker<'tcx> {
 /// Check whether a path is a `use` item that has been marked as unstable.
 fn is_unstable_reexport<'tcx>(tcx: TyCtxt<'tcx>, id: hir::HirId) -> bool {
     // Get the LocalDefId so we can lookup the item to check the kind.
-    let Some(def_id) = tcx.hir().opt_local_def_id(id) else { return false};
+    let Some(def_id) = tcx.hir().opt_local_def_id(id) else { return false; };
 
     let Some(stab) = tcx.stability().local_stability(def_id) else {
         return false;
