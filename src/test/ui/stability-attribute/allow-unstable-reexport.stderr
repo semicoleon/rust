@@ -1,5 +1,13 @@
 error[E0658]: use of unstable library feature 'unstable_test_feature'
-  --> $DIR/allow-unstable-reexport.rs:21:5
+  --> $DIR/allow-unstable-reexport.rs:20:9
+   |
+LL | pub use lint_stability::unstable as unstable2;
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = help: add `#![feature(unstable_test_feature)]` to the crate attributes to enable
+
+error[E0658]: use of unstable library feature 'unstable_test_feature'
+  --> $DIR/allow-unstable-reexport.rs:26:5
    |
 LL |     unstable();
    |     ^^^^^^^^
@@ -7,13 +15,13 @@ LL |     unstable();
    = help: add `#![feature(unstable_test_feature)]` to the crate attributes to enable
 
 error[E0658]: use of unstable library feature 'unstable_test_feature': text
-  --> $DIR/allow-unstable-reexport.rs:22:5
+  --> $DIR/allow-unstable-reexport.rs:27:5
    |
 LL |     unstable_text();
    |     ^^^^^^^^^^^^^
    |
    = help: add `#![feature(unstable_test_feature)]` to the crate attributes to enable
 
-error: aborting due to 2 previous errors
+error: aborting due to 3 previous errors
 
 For more information about this error, try `rustc --explain E0658`.

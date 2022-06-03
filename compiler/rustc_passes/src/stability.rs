@@ -13,7 +13,7 @@ use rustc_hir::intravisit::{self, Visitor};
 use rustc_hir::{FieldDef, Generics, HirId, Item, TraitRef, Ty, TyKind, Variant};
 use rustc_middle::hir::nested_filter;
 use rustc_middle::middle::privacy::AccessLevels;
-use rustc_middle::middle::stability::{DeprecationEntry, EvalOverride, Index};
+use rustc_middle::middle::stability::{AllowUnstable, DeprecationEntry, Index};
 use rustc_middle::ty::{self, query::Providers, TyCtxt};
 use rustc_session::lint;
 use rustc_session::lint::builtin::{INEFFECTIVE_UNSTABLE_TRAIT_IMPL, USELESS_DEPRECATED};
@@ -813,28 +813,29 @@ impl<'tcx> Visitor<'tcx> for Checker<'tcx> {
                 Some(id),
                 path.span,
                 method_span,
-                if is_path_reexport(self.tcx, id) {
-                    EvalOverride::AllowUnstable
-                } else {
-                    EvalOverride::None
-                },
+                if is_unstable_reexport(self.tcx, id) { AllowUnstable::Yes } else { AllowUnstable::No },
             )
         }
         intravisit::walk_path(self, path)
     }
 }
 
-/// Check whether a path is a `use` item
-fn is_path_reexport<'tcx>(tcx: TyCtxt<'tcx>, id: hir::HirId) -> bool {
+/// Check whether a path is a `use` item that has been marked as unstable.
+fn is_unstable_reexport<'tcx>(tcx: TyCtxt<'tcx>, id: hir::HirId) -> bool {
     // Get the LocalDefId so we can lookup the item to check the kind.
     let Some(def_id) = tcx.hir().opt_local_def_id(id) else { return false};
 
-    // If this is a path that isn't a use, we don't need to do anything special
-    if !matches!(tcx.hir().item(hir::ItemId { def_id }).kind, ItemKind::Use(..)) {
+    let Some(stab) = tcx.stability().local_stability(def_id) else {
+        return false;
+    };
+
+    if stab.level.is_stable() {
+        // The re-export is not marked as unstable, don't override
         return false;
     }
 
-    if tcx.visibility(def_id) != ty::Visibility::Public {
+    // If this is a path that isn't a use, we don't need to do anything special
+    if !matches!(tcx.hir().item(hir::ItemId { def_id }).kind, ItemKind::Use(..)) {
         return false;
     }
 

@@ -307,17 +307,11 @@ fn suggestion_for_allocator_api(
 }
 
 /// An override option for eval_stability.
-pub enum EvalOverride {
+pub enum AllowUnstable {
     /// Don't emit an unstable error for the item
-    AllowUnstable,
+    Yes,
     /// Handle the item normally
-    None,
-}
-
-impl Default for EvalOverride {
-    fn default() -> Self {
-        Self::None
-    }
+    No,
 }
 
 impl<'tcx> TyCtxt<'tcx> {
@@ -337,7 +331,7 @@ impl<'tcx> TyCtxt<'tcx> {
         span: Span,
         method_span: Option<Span>,
     ) -> EvalResult {
-        self.eval_stability_override(def_id, id, span, method_span, Default::default())
+        self.eval_stability_override(def_id, id, span, method_span, AllowUnstable::No)
     }
 
     /// Evaluates the stability of an item.
@@ -357,7 +351,7 @@ impl<'tcx> TyCtxt<'tcx> {
         id: Option<HirId>,
         span: Span,
         method_span: Option<Span>,
-        eval_override: EvalOverride,
+        eval_override: AllowUnstable,
     ) -> EvalResult {
         // Deprecated attributes apply in-crate and cross-crate.
         if let Some(id) = id {
@@ -455,7 +449,7 @@ impl<'tcx> TyCtxt<'tcx> {
                     }
                 }
 
-                if matches!(eval_override, EvalOverride::AllowUnstable) {
+                if matches!(eval_override, AllowUnstable::Yes) {
                     return EvalResult::Allow;
                 }
 
@@ -485,7 +479,7 @@ impl<'tcx> TyCtxt<'tcx> {
         span: Span,
         method_span: Option<Span>,
     ) {
-        self.check_stability_override(def_id, id, span, method_span, Default::default())
+        self.check_stability_override(def_id, id, span, method_span, AllowUnstable::No)
     }
 
     /// Checks if an item is stable or error out.
@@ -503,7 +497,7 @@ impl<'tcx> TyCtxt<'tcx> {
         id: Option<HirId>,
         span: Span,
         method_span: Option<Span>,
-        eval_override: EvalOverride,
+        eval_override: AllowUnstable,
     ) {
         self.check_optional_stability(
             def_id,
@@ -529,7 +523,7 @@ impl<'tcx> TyCtxt<'tcx> {
         id: Option<HirId>,
         span: Span,
         method_span: Option<Span>,
-        eval_override: EvalOverride,
+        eval_override: AllowUnstable,
         unmarked: impl FnOnce(Span, DefId),
     ) {
         let soft_handler = |lint, span, msg: &_| {
