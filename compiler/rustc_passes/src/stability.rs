@@ -813,7 +813,11 @@ impl<'tcx> Visitor<'tcx> for Checker<'tcx> {
                 Some(id),
                 path.span,
                 method_span,
-                if is_unstable_reexport(self.tcx, id) { AllowUnstable::Yes } else { AllowUnstable::No },
+                if is_unstable_reexport(self.tcx, id) {
+                    AllowUnstable::Yes
+                } else {
+                    AllowUnstable::No
+                },
             )
         }
         intravisit::walk_path(self, path)

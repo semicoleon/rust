@@ -14,7 +14,7 @@ pub use lint_stability::unstable;
 // We want to confirm that using a re-export through another crate behaves
 // the same way as using an item directly
 #[unstable(feature = "unstable_test_feature", issue = "none")]
-pub use lint_stability_reexport::unstable_text; 
+pub use lint_stability_reexport::unstable_text;
 
 // Ensure items which aren't marked as unstable can't re-export unstable items
 #[stable(feature = "lint_stability", since = "1.0.0")]
