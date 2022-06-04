@@ -1,4 +1,4 @@
-// Allow an unstable re-export without requiring a feature gate. 
+// Allow an unstable re-export without requiring a feature gate.
 // #94972
 
 // aux-build:lint-stability.rs
