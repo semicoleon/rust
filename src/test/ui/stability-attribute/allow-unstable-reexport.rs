@@ -1,4 +1,5 @@
-// Allow an unstable re-export without requiring a feature gate. https://github.com/rust-lang/rust/issues/94972
+// Allow an unstable re-export without requiring a feature gate. 
+// #94972
 
 // aux-build:lint-stability.rs
 // aux-build:lint-stability-reexport.rs
